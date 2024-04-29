@@ -14,6 +14,11 @@ type Stock struct {
 	Amount int     `json:"amount"`
 }
 
+type checkedStock struct {
+	Name   string  `json:"name"`
+	Amount int     `json:"amount"`
+}
+
 func updateStock(c *gin.Context, db *gorm.DB) {
 	var stock Stock
 	if err := c.ShouldBindJSON(&stock); err != nil {
@@ -36,6 +41,24 @@ func updateStock(c *gin.Context, db *gorm.DB) {
 		db.Model(&exsitingStock).Update("amount", new_amount)
 	}
 	c.JSON(http.StatusOK, exsitingStock)
+}
+
+func checkStock(c *gin.Context, db *gorm.DB) {
+	var stocks []Stock
+	var checkedstocks []checkedStock
+	var result *gorm.DB
+	if name := c.Param("name"); name == "" {
+		result = db.Find(&stocks).Find(&checkedstocks)
+	} else {
+		result = db.Where("name = ?", name).Find(&stocks).Find(&checkedstocks)
+	}
+	// エラー処理
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error!"})
+		return
+	}
+	// 正常時処理
+	c.JSON(http.StatusOK, checkedstocks)
 }
 
 func main() {
@@ -80,9 +103,12 @@ func main() {
     * 例: {"apple": 1, "banana": 2, "orange": 0}
     * 在庫が0のものは含まない
     **/
-    r.GET("/v1/stocks/:name", func(c *gin.Context) {
-        name :=c.Param("name")
+    r.GET("/v1/stocks", func(c *gin.Context) {
+        checkStock(c, db)
     })
+	r.GET("/v1/stocks/:name", func(c *gin.Context) {
+		checkStock(c, db)
+	})
 
 	r.Run(":8080")
 }
