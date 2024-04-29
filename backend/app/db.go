@@ -21,7 +21,7 @@ func ConnectDB () *gorm.DB {
 	dbUser := os.Getenv("POSTGRES_USER")
 	dbPassword := os.Getenv("POSTGRES_PASSWORD")
 	dbName := os.Getenv("POSTGRES_DB")
-	dbHost := "localhost"
+	dbHost := "postgres"
 	dbPort := "5432"
 
 	// DSNを構築
